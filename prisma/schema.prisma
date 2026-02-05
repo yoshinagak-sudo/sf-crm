@@ -1,0 +1,410 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  name          String
+  role          Role      @default(USER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  opportunities Opportunity[] @relation("OpportunityOwner")
+
+  @@map("users")
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  sfId                  String?   @unique
+  name                  String
+  type                  String?
+  phone                 String?
+  fax                   String?
+  website               String?
+  industry              String?
+  numberOfEmployees     Int?
+  description           String?
+  billingStreet         String?
+  billingCity           String?
+  billingState          String?
+  billingPostalCode     String?
+  billingCountry        String?
+  shippingStreet        String?
+  shippingCity          String?
+  shippingState         String?
+  shippingPostalCode    String?
+  shippingCountry       String?
+  accountSource         String?
+  parentId              String?
+  parent                Account?  @relation("AccountParent", fields: [parentId], references: [id])
+  children              Account[] @relation("AccountParent")
+  // Custom fields
+  businessType          String?   @map("business_type")
+  unit                  String?
+  land                  String?
+  gazette               String?
+  packagingMaterial     String?
+  packing               String?
+  deliveryMethod        String?
+  area                  String?
+  packingCase           Float?    @map("packing_case")
+  shopNumber            Float?    @map("shop_number")
+  shippingMethod        String?   @map("shipping_method")
+  accountCode           String?   @map("account_code")
+  rank                  String?
+  sales                 Boolean   @default(false)
+  task                  Boolean   @default(false)
+  newExisting           String?   @map("new_existing")
+  termination           String?
+  delivery              String?
+
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  contacts              Contact[]
+  opportunities         Opportunity[]
+  cases                 Case[]
+  tasks                 SfTask[]
+  events                Event[]
+  shippingRequests      ShippingRequest[]
+  magistrateMasters     MagistrateMaster[]
+  productMasters        ProductMaster[]
+  meetings              Meeting[]
+
+  @@map("accounts")
+}
+
+model Contact {
+  id                  String    @id @default(cuid())
+  sfId                String?   @unique
+  accountId           String?
+  account             Account?  @relation(fields: [accountId], references: [id])
+  lastName            String
+  firstName           String?
+  salutation          String?
+  phone               String?
+  fax                 String?
+  mobilePhone         String?
+  email               String?
+  title               String?
+  department          String?
+  mailingStreet       String?
+  mailingCity         String?
+  mailingState        String?
+  mailingPostalCode   String?
+  mailingCountry      String?
+  // Custom fields
+  personalNeeds       String?   @map("personal_needs")
+  position            String?
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  opportunities       Opportunity[]
+  cases               Case[]
+
+  @@map("contacts")
+}
+
+model Opportunity {
+  id                    String    @id @default(cuid())
+  sfId                  String?   @unique
+  accountId             String?
+  account               Account?  @relation(fields: [accountId], references: [id])
+  contactId             String?
+  contact               Contact?  @relation(fields: [contactId], references: [id])
+  name                  String
+  description           String?
+  stageName             String
+  amount                Float?
+  closeDate             DateTime
+  type                  String?
+  nextStep              String?
+  leadSource            String?
+  isClosed              Boolean   @default(false)
+  isWon                 Boolean   @default(false)
+  forecastCategory      String?
+  campaignId            String?
+  campaign              Campaign? @relation(fields: [campaignId], references: [id])
+  // Custom fields
+  product2Id            String?   @map("product2_id")
+  product2              Product?  @relation(fields: [product2Id], references: [id])
+  lossReason            String?   @map("loss_reason")
+  opportunityDate       DateTime? @map("opportunity_date")
+  process               String?
+  customerTask          String?   @map("customer_task")
+  customerSolution      String?   @map("customer_solution")
+  potentialNeeds        String?   @map("potential_needs")
+  budgetSituation       String?   @map("budget_situation")
+  keyman                String?
+  outcomeNote           String?   @map("outcome_note")
+  orderReason           String?   @map("order_reason")
+  orderReasonNote       String?   @map("order_reason_note")
+  status                String?
+  accuracy              String?
+  stocksNumber          Float?    @map("stocks_number")
+  lostOrderReason       String?   @map("lost_order_reason")
+  kg                    Float?
+  salesAmount           Float?    @map("sales_amount")
+  valueProposition      String?   @map("value_proposition")
+  budget                String?
+  authority             String?
+  needs                 String?
+  timeframe             String?
+  competitor            String?
+  ownerId               String?   @map("owner_id")
+  ownerName             String?   @map("owner_name")
+  // システムユーザーとの関連（Salesforce ownerIdとは別管理）
+  userId                String?   @map("user_id")
+  user                  User?     @relation("OpportunityOwner", fields: [userId], references: [id])
+
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("opportunities")
+}
+
+model Case {
+  id                  String    @id @default(cuid())
+  sfId                String?   @unique
+  caseNumber          String?   @unique
+  accountId           String?
+  account             Account?  @relation(fields: [accountId], references: [id])
+  contactId           String?
+  contact             Contact?  @relation(fields: [contactId], references: [id])
+  subject             String?
+  description         String?
+  type                String?
+  status              String?
+  reason              String?
+  origin              String?
+  priority            String?
+  isClosed            Boolean   @default(false)
+  closedDate          DateTime?
+  isEscalated         Boolean   @default(false)
+  // Custom fields
+  closeLimit          DateTime? @map("close_limit")
+  feeling             String?
+  happeningDate       DateTime? @map("happening_date")
+  factoryName         String?   @map("factory_name")
+  goshitekisya        String?
+  reasonClass         String?   @map("reason_class")
+  reasonDetail        String?   @map("reason_detail")
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@map("cases")
+}
+
+model Campaign {
+  id                  String    @id @default(cuid())
+  sfId                String?   @unique
+  name                String
+  type                String?
+  status              String?
+  startDate           DateTime?
+  endDate             DateTime?
+  expectedRevenue     Float?
+  budgetedCost        Float?
+  actualCost          Float?
+  description         String?
+  isActive            Boolean   @default(true)
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  opportunities       Opportunity[]
+
+  @@map("campaigns")
+}
+
+model Product {
+  id                  String    @id @default(cuid())
+  sfId                String?   @unique
+  name                String
+  productCode         String?
+  description         String?
+  isActive            Boolean   @default(true)
+  family              String?
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  opportunities       Opportunity[]
+  productMasters      ProductMaster[]
+  shippingRequests    ShippingRequest[]
+
+  @@map("products")
+}
+
+model SfTask {
+  id                  String    @id @default(cuid())
+  sfId                String?   @unique
+  accountId           String?
+  account             Account?  @relation(fields: [accountId], references: [id])
+  subject             String?
+  activityDate        DateTime?
+  status              String?
+  priority            String?
+  description         String?
+  // Custom fields
+  companion           String?
+  impressions         String?
+  keymanFlag          Boolean   @default(false) @map("keyman_flag")
+  presenFlag          Boolean   @default(false) @map("presen_flag")
+  projectDiscovery    Boolean   @default(false) @map("project_discovery")
+  spotFlag            Boolean   @default(false) @map("spot_flag")
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@map("sf_tasks")
+}
+
+model Event {
+  id                  String    @id @default(cuid())
+  sfId                String?   @unique
+  accountId           String?
+  account             Account?  @relation(fields: [accountId], references: [id])
+  subject             String?
+  location            String?
+  isAllDayEvent       Boolean   @default(false)
+  startDateTime       DateTime?
+  endDateTime         DateTime?
+  description         String?
+  type                String?
+  // Custom fields
+  companion           String?
+  impressions         String?
+  keymanFlag          Boolean   @default(false) @map("keyman_flag")
+  presenFlag          Boolean   @default(false) @map("presen_flag")
+  projectDiscovery    Boolean   @default(false) @map("project_discovery")
+  spotFlag            Boolean   @default(false) @map("spot_flag")
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@map("events")
+}
+
+model Meeting {
+  id                  String    @id @default(cuid())
+  sfId                String?   @unique
+  name                String?
+  accountId           String?
+  account             Account?  @relation(fields: [accountId], references: [id])
+  field1              String?
+  field2              String?
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@map("meetings")
+}
+
+model InventoryForecasting {
+  id                    String    @id @default(cuid())
+  sfId                  String?   @unique
+  name                  String?
+  centerDeliveryDate    DateTime? @map("center_delivery_date")
+  pieceQuantity         Float?    @map("piece_quantity")
+  additionalHarvest     Float?    @map("additional_harvest")
+  stockAddition         Float?    @map("stock_addition")
+
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("inventory_forecastings")
+}
+
+model MagistrateMaster {
+  id                  String    @id @default(cuid())
+  sfId                String?   @unique
+  name                String?
+  accountId           String?
+  account             Account?  @relation(fields: [accountId], references: [id])
+  unit                String?
+  customerCode        String?   @map("customer_code")
+  deliveryCode        String?   @map("delivery_code")
+  magistrateId        String?   @map("magistrate_id")
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  @@map("magistrate_masters")
+}
+
+model ProductMaster {
+  id                  String    @id @default(cuid())
+  sfId                String?   @unique
+  name                String?
+  accountId           String?
+  account             Account?  @relation(fields: [accountId], references: [id])
+  productId           String?   @map("product_id")
+  product             Product?  @relation(fields: [productId], references: [id])
+  productCode         String?   @map("product_code")
+  unit                String?
+  productIdCode       String?   @map("product_id_code")
+  unitPrice           Float?    @map("unit_price")
+
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  shippingRequests    ShippingRequest[]
+
+  @@map("product_masters")
+}
+
+model ShippingRequest {
+  id                    String    @id @default(cuid())
+  sfId                  String?   @unique
+  name                  String?
+  accountId             String?
+  account               Account?  @relation(fields: [accountId], references: [id])
+  land                  String?
+  gazette               String?
+  sterilizationTreatment String?  @map("sterilization_treatment")
+  packagingMaterial     String?   @map("packaging_material")
+  packing               String?
+  unit                  String?
+  centerDeliveryDate    DateTime? @map("center_delivery_date")
+  classification        String?
+  varietyId             String?   @map("variety_id")
+  variety               Product?  @relation(fields: [varietyId], references: [id])
+  quantity              Float?
+  cs                    Float?
+  note                  String?
+  pieceConversion       Float?    @map("piece_conversion")
+  shippingMethod        String?   @map("shipping_method")
+  requester             String?
+  packingCase           Float?    @map("packing_case")
+  expectedShippingDate  DateTime? @map("expected_shipping_date")
+  reportId              String?   @map("report_id")
+  status                String?
+  productMasterId       String?   @map("product_master_id")
+  productMaster         ProductMaster? @relation(fields: [productMasterId], references: [id])
+  predictQuantity       Float?    @map("predict_quantity")
+  unitPrice             Float?    @map("unit_price")
+  salesAmount           Float?    @map("sales_amount")
+  productName           String?   @map("product_name")
+  pieceConversionPredict Float?   @map("piece_conversion_predict")
+
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@map("shipping_requests")
+}
